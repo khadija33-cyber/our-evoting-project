@@ -26,6 +26,9 @@ import ResendVerificationPage from "./pages/ResendVerificationPage";
 import OTPVerificationPage from "./pages/OTPVerificationPage";
 import FeaturesPage from "./pages/featurespage";
 import HowItWorksPage from "./pages/howitworkspage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import MainLayout from "./components/MainLayout";
 
 function App() {
   const { loading } = useAuth();
@@ -40,46 +43,31 @@ function App() {
 
   return (
     <Routes>
-      {/* Landing page route - no header */}
+      {/* Pages without header */}
       <Route path="/" element={<LandingPage />} />
-      
-      {/* Features and How It Works pages - no default header */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/features" element={<FeaturesPage />} />
       <Route path="/how-it-works" element={<HowItWorksPage />} />
-
-      {/* Routes with Header */}
-      <Route
-        path="/*"
-        element={
-          <>
-            <Header />
-            <main className="container mx-auto px-4 py-8">
-              <Routes>
-                <Route path="home" element={<HomePage />} />
-                <Route path="login" element={<LoginPage />} />
-                <Route path="register" element={<RegisterPage />} />
-                <Route path="verify-email" element={<VerifyEmailPage />} />
-                <Route path="verify-otp" element={<OTPVerificationPage />} />
-                <Route path="resend-verification" element={<ResendVerificationPage />} />
-                <Route path="elections" element={<ElectionsPage />} />
-                <Route path="elections/:id" element={<ElectionDetailsPage />} />
-                <Route path="results/:id" element={<ResultsPage />} />
-                <Route path="features" element={<FeaturesPage />} />
-
-                {/* Protected routes */}
-                <Route path="vote/:id" element={<ProtectedRoute><VotePage /></ProtectedRoute>} />
-                <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-
-                {/* Admin routes */}
-                <Route path="admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-                <Route path="admin/elections/create" element={<AdminRoute><CreateElectionPage /></AdminRoute>} />
-                <Route path="admin/elections/:id/edit" element={<AdminRoute><EditElectionPage /></AdminRoute>} />
-                <Route path="admin/blockchain" element={<AdminRoute><BlockchainStatusPage /></AdminRoute>} />
-              </Routes>
-            </main>
-          </>
-        }
-      />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      
+      {/* Routes with headers/layouts */}
+      <Route element={<MainLayout />}>
+        <Route path="home" element={<HomePage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="verify-otp" element={<OTPVerificationPage />} />
+        <Route path="resend-verification" element={<ResendVerificationPage />} />
+        <Route path="elections" element={<ElectionsPage />} />
+        <Route path="elections/:id" element={<ElectionDetailsPage />} />
+        <Route path="results/:id" element={<ResultsPage />} />
+        <Route path="vote/:id" element={<ProtectedRoute><VotePage /></ProtectedRoute>} />
+        <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+        <Route path="admin/elections/create" element={<AdminRoute><CreateElectionPage /></AdminRoute>} />
+        <Route path="admin/elections/:id/edit" element={<AdminRoute><EditElectionPage /></AdminRoute>} />
+        <Route path="admin/blockchain" element={<AdminRoute><BlockchainStatusPage /></AdminRoute>} />
+      </Route>
     </Routes>
   );
 }

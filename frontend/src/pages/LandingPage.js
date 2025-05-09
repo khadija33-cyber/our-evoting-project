@@ -13,9 +13,10 @@ const LandingPage = () => {
             <div className="hidden md:flex items-center space-x-6">
               <Link to="/" className="text-gray-600 hover:text-gray-900">Accueil</Link>
               <Link to="/features" className="text-gray-600 hover:text-gray-900">Fonctionnalités</Link>
+
               <Link to="/how-it-works" className="text-gray-600 hover:text-gray-900">Comment ça marche</Link>
-              <Link to="#about" className="text-gray-600 hover:text-gray-900">À propos</Link>
-              <Link to="#contact" className="text-gray-600 hover:text-gray-900">Contact</Link>
+              <Link to="/about" className="text-gray-600 hover:text-gray-900">À propos</Link>
+              <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact</Link>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/login" className="border border-blue-500 text-blue-500 px-5 py-2 rounded-md hover:bg-blue-50">Connexion</Link>

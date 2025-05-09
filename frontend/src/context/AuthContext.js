@@ -104,28 +104,28 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Fonction d'inscription
-  const register = async (userData) => {
+  const register = async (firstName, lastName, email, password, nationalId) => {
     try {
-      const { data } = await authApi.register(userData)
-
-      // Stocker le token et les données utilisateur
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data))
-
-      setUser(data)
-      return {
-        success: true,
-        needsVerification: !data.isEmailVerified,
-        message: data.message,
-      }
+      // Combine firstName and lastName into the name field expected by backend
+      const name = `${firstName} ${lastName}`.trim();
+      
+      // Send properly formatted data to match backend expectations
+      const { data } = await authApi.register({ 
+        name,       // This is what your backend expects
+        email, 
+        password, 
+        nationalId 
+      });
+      
+      return { success: true, message: data.message };
     } catch (error) {
-      console.error("Erreur d'inscription:", error)
-      return {
-        success: false,
-        message: error.response?.data?.message || "Erreur d'inscription",
-      }
+      console.error('Registration error:', error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Une erreur est survenue' 
+      };
     }
-  }
+  };
 
   // Fonction de déconnexion
   const logout = async () => {

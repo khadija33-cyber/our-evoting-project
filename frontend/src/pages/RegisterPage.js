@@ -1,232 +1,241 @@
 "use client"
 
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { toast } from "react-toastify"
-import { authApi } from "../services/api"
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    fullName: "",
     nationalId: "",
+    email: "",
     password: "",
     confirmPassword: "",
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [serverStatus, setServerStatus] = useState("idle") // 'idle', 'checking', 'available', 'unavailable'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const navigate = useNavigate()
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
-    })
-  }
-
-  // Fonction pour vérifier si le serveur est disponible
-  const checkServerAvailability = async () => {
-    try {
-      setServerStatus("checking")
-      // Utiliser une route simple pour vérifier la disponibilité du serveur
-      const response = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/health`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // Timeout court pour la vérification
-        signal: AbortSignal.timeout(3000),
-      })
-
-      if (response.ok) {
-        setServerStatus("available")
-        return true
-      } else {
-        setServerStatus("unavailable")
-        return false
-      }
-    } catch (error) {
-      console.error("Erreur de vérification du serveur:", error)
-      setServerStatus("unavailable")
-      return false
-    }
-  }
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    // Vérifier que les mots de passe correspondent
+    e.preventDefault();
+    
+    // Form validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas")
-      setLoading(false)
-      return
+      setError("Les mots de passe ne correspondent pas");
+      return;
     }
 
-    // Vérifier d'abord si le serveur est disponible
-    const isServerAvailable = await checkServerAvailability()
-    if (!isServerAvailable) {
-      setError("Le serveur est actuellement indisponible. Veuillez réessayer plus tard.")
-      setLoading(false)
-      toast.error("Impossible de se connecter au serveur")
-      return
-    }
+    setLoading(true);
+    setError(null);
+
+    // Split fullName into firstName and lastName for the API
+    const nameParts = formData.fullName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
 
     try {
-      const response = await authApi.register({
-        name: formData.name,
-        email: formData.email,
-        nationalId: formData.nationalId,
-        password: formData.password,
-      })
+      const { success, message } = await register(
+        firstName,
+        lastName,
+        formData.email,
+        formData.password,
+        formData.nationalId  // Add this parameter
+      );
 
-      toast.success("Inscription réussie")
-
-      // Vérifier si la vérification est requise
-      if (response.data.requiresVerification) {
-        // Rediriger vers la page de vérification OTP
-        navigate("/verify-otp", {
-          state: {
-            email: formData.email,
-            otpCode: response.data.otpCode,
-          },
-        })
+      if (success) {
+        toast.success("Inscription réussie! Veuillez vérifier votre boîte mail pour confirmer votre compte.");
+        navigate("/verify-email", { 
+          state: { email: formData.email } 
+        });
       } else {
-        // Rediriger vers la page d'accueil
-        navigate("/")
+        setError(message);
+        toast.error(message);
       }
     } catch (error) {
-      console.error("Erreur d'inscription:", error)
-
-      // Message d'erreur personnalisé pour les timeouts
-      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
-        setError("Le serveur met trop de temps à répondre. Veuillez réessayer plus tard.")
-        toast.error("Délai d'attente dépassé")
-      } else {
-        setError(error.response?.data?.message || "Une erreur est survenue lors de l'inscription")
-        toast.error(error.response?.data?.message || "Erreur d'inscription")
-      }
+      console.error("Erreur d'inscription:", error);
+      setError("Une erreur est survenue lors de l'inscription");
+      toast.error("Une erreur est survenue lors de l'inscription");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="max-w-md mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">Inscription</h1>
-
-      {error && <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>}
-
-      {serverStatus === "unavailable" && (
-        <div className="bg-yellow-100 text-yellow-800 p-4 rounded mb-4">
-          Le serveur semble être indisponible. Vos données pourraient ne pas être enregistrées.
+    <div className="min-h-screen flex items-center justify-center bg-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+        <div className="text-center mb-6">
+          <div className="flex justify-center">
+           
+          </div>
+          <h2 className="mt-2 text-center text-xl font-semibold">Secret <span className="text-red-500">Ballot</span></h2>
+          
+          <h2 className="mt-6 text-center text-2xl font-bold text-blue-700">
+            Créer un compte
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Rejoignez notre plateforme de vote électronique
+          </p>
         </div>
-      )}
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="mb-4">
-            <label htmlFor="name" className="form-label">
+        {error && (
+          <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
               Nom complet
             </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
+            <div className="mt-1">
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                autoComplete="name"
+                required
+                value={formData.fullName}
+                onChange={handleChange}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="email" className="form-label">
-              Email
+          <div>
+            <label htmlFor="nationalId" className="block text-sm font-medium text-gray-700">
+              Numéro d'identité nationale
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
+            <div className="mt-1">
+              <input
+                id="nationalId"
+                name="nationalId"
+                type="text"
+                autoComplete="off"
+                required
+                value={formData.nationalId}
+                onChange={handleChange}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="nationalId" className="form-label">
-              Numéro d'identité national
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Adresse email
             </label>
-            <input
-              type="text"
-              id="nationalId"
-              name="nationalId"
-              value={formData.nationalId}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
+            <div className="mt-1">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="password" className="form-label">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Mot de passe
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="form-input"
-              required
-              minLength="6"
-            />
+            <div className="mt-1">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
-          <div className="mb-6">
-            <label htmlFor="confirmPassword" className="form-label">
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
               Confirmer le mot de passe
             </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
+            <div className="mt-1">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full btn btn-primary">
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                Inscription en cours...
-              </div>
-            ) : (
-              "S'inscrire"
-            )}
-          </button>
-        </form>
-      </div>
+          <div className="flex items-center">
+            <input
+              id="acceptTerms"
+              name="acceptTerms"
+              type="checkbox"
+              checked={formData.acceptTerms}
+              onChange={handleChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
+              J'accepte les <Link to="/terms" className="text-blue-600 hover:underline">conditions d'utilisation</Link>
+            </label>
+          </div>
 
-      <div className="mt-4 text-center">
-        Déjà un compte ?{" "}
-        <Link to="/login" className="text-blue-600 hover:underline">
-          Se connecter ici
-        </Link>
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  Inscription en cours...
+                </div>
+              ) : (
+                "S'inscrire"
+              )}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 text-center">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">ou</span>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm text-gray-600">
+            Vous avez déjà un compte?{" "}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Se connecter
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RegisterPage
+export default RegisterPage;

@@ -48,6 +48,9 @@ services:
       - NODE_ENV=development
       # Ajouter CORS pour permettre les connexions depuis le frontend
       - CORS_ORIGIN=http://localhost:3000
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL}
+      - NODE_ENV=production
     volumes:
       - ./backend:/app
       - /app/node_modules
